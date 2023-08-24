@@ -1,0 +1,86 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+bike <- read.csv('bikeshare.csv')
+bike
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+ggplot(bike,aes(temp,count)) + geom_point(alpha=0.5, aes(color=temp)) + theme_bw()
+```
+
+```{r}
+#Convert to POSIXct()
+bike$datetime <- as.POSIXct(bike$datetime)
+```
+
+```{r}
+ggplot(bike,aes(datetime,count)) + geom_point(aes(color=temp,alpha=0.5)) + scale_color_continuous(low='green',high='red') + theme_bw()
+```
+
+```{r}
+ggplot(bike,aes(factor(season),count)) + geom_boxplot(aes(color=factor(season))) + theme_bw()
+```
+
+```{r}
+# Feature Engineering
+bike$hour <- sapply(bike$datetime, function(x){format(x, '%H')})
+bike$hour <- sapply(bike$hour, as.numeric)
+bike
+```
+
+pl \<- ggplot(filter(bike,workingday==1),aes(hour,count))
+
+pl \<- pl + geom_point(position = position_jitter(w=1,h=0),aes(color=temp))
+
+pl + scale_color_gradientn(colours = c('dark blue','blue','light blue','orange')) + theme_bw()
+
+```{r}
+# Scatterplot
+pl <- ggplot(filter(bike,workingday==1),aes(hour,count))
+
+pl <- pl + geom_point(position = position_jitter(w=1,h=0),aes(color=temp))
+pl + scale_color_gradientn(colours = c('dark blue','blue','light blue','orange')) + theme_bw()
+```
+
+```{r}
+pl <- ggplot(filter(bike,workingday==0),aes(hour,count))
+
+pl <- pl + geom_point(position = position_jitter(w=1,h=0),aes(color=temp))
+pl + scale_color_gradientn(colours = c('dark blue','blue','light blue','orange')) + theme_bw()
+```
+
+```{r}
+# Build Model
+
+temp.model <- lm(count ~ hour ,bike)
+
+summary(temp.model)
+```
+
+```{r}
+# How many bike rental counts at 1 hour ?
+#intercept + temp * 25
+print(70.470 + 10.493 * 1)
+```
+
+```{r}
+temp.text <- data.frame(hour=c(1,2,3))
+prediction <- predict(temp.model,temp.text)
+prediction
+```
+
+```{r}
+ggplot(bike,aes(hour,count)) + geom_point() + scale_color_gradientn(colours = c('blue','yellow','red','green'))
+```
+
+```{r}
+
+
+```
