@@ -1,0 +1,119 @@
+---
+title: "Linear Regression"
+output: html_notebook
+---
+
+```{r}
+# Student Performance Data Set.
+df <- read.csv('student-mat.csv',sep = ';')
+head(df)
+```
+
+```{r}
+summary(df)
+```
+
+```{r}
+#checking null value
+any(is.na(df))
+```
+
+```{r}
+str(df)
+```
+
+```{r}
+library(ggplot2)
+library(ggthemes)
+library(dplyr)
+library(corrgram)
+library(corrplot)
+```
+
+```{r}
+#Correlation
+num.cols <- sapply(df, is.numeric)
+#filter
+cor.data <- cor(df[,num.cols])
+cor.data
+```
+
+```{r}
+corrplot(cor.data,method = 'color')
+```
+
+```{r}
+corrgram(df,order = TRUE, lower.panel = panel.shade,upper.panel = panel.pie, text.panel = panel.txt)
+```
+
+```{r}
+#explotory Data analysis
+ggplot(df,aes(x=G3)) + geom_histogram(bins = 20,alpha=0.5, fill= 'red')
+```
+
+```{r}
+#split Data into Train and Test set
+library(caTools)
+#Set A seed
+set.seed(101)
+#split up sample
+sample <- sample.split(df$G3, SplitRatio = 0.7)
+# Train and Test Data
+train <- subset(df, sample == TRUE)
+
+test <- subset(df, sample == FALSE)
+```
+
+```{r}
+#Bulding Linear Regression Model
+model <- lm(G3 ~ . , train)
+
+#prediction
+G3.prediction <- predict(model, test)
+
+results <- cbind(G3.prediction,test$G3)
+colnames(results) <- c('Predicted','actual')
+results <- as.data.frame(results)
+results
+# Take care of negative value
+to_zero <- function(x){
+  if(x<0){
+    return(0)
+  }
+  else{
+    return(x)
+  }
+}
+# Apply zero function
+results$Predicted <- sapply(results$Predicted, to_zero)
+
+results
+
+# Mean Squared Error
+mse <- mean((results$actual - results$Predicted)^2)
+print('MSE:')
+mse
+print('Root MSE :')
+mse^0.5
+
+SSE <- sum((results$Predicted - results$actual)^2)
+SST <- sum((mean(df$G3) - results$actual)^2)
+
+R2 <- 1 - SSE/SST
+R2
+```
+
+```{r}
+# Interpret the model
+summary(model)
+```
+
+```{r}
+res <- residuals(model)
+res <- as.data.frame(res)
+head(res)
+```
+
+```{r}
+ggplot(res,aes(res)) + geom_histogram(fill='blue')
+```
